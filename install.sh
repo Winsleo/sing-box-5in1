@@ -99,6 +99,54 @@ ufw allow 8446/tcp > /dev/null
 ufw --force enable > /dev/null
 echo "    UFW default-deny on. Open ports: ${SSH_PORT}/tcp, 443/tcp, 8443/udp, 8444/udp, 8445/tcp, 8446/tcp."
 
+echo "==> Saving disk: capping logs and enabling regular cleanup..."
+mkdir -p /etc/systemd/journald.conf.d
+cat > /etc/systemd/journald.conf.d/99-sbox.conf <<'EOF'
+[Journal]
+SystemMaxUse=100M
+RuntimeMaxUse=50M
+MaxFileSec=7day
+EOF
+systemctl restart systemd-journald 2>/dev/null || true
+# Rotate any file logs the node writes under /etc/s-box (3 days kept, compressed).
+cat > /etc/logrotate.d/sing-box <<'EOF'
+/etc/s-box/*.log {
+    daily
+    rotate 3
+    compress
+    missingok
+    notifempty
+    copytruncate
+}
+EOF
+# Weekly cleanup: apt cache + journals older than 7 days / over 100 MB.
+cat > /usr/local/bin/sbox-cleanup <<'EOF'
+#!/usr/bin/env bash
+apt-get autoclean -qq >/dev/null 2>&1 || true
+journalctl --vacuum-size=100M >/dev/null 2>&1 || true
+journalctl --vacuum-time=7d >/dev/null 2>&1 || true
+EOF
+chmod +x /usr/local/bin/sbox-cleanup
+cat > /etc/systemd/system/sbox-cleanup.service <<'EOF'
+[Unit]
+Description=Weekly disk cleanup for sing-box node
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/sbox-cleanup
+EOF
+cat > /etc/systemd/system/sbox-cleanup.timer <<'EOF'
+[Unit]
+Description=Run disk cleanup weekly
+[Timer]
+OnCalendar=weekly
+Persistent=true
+[Install]
+WantedBy=timers.target
+EOF
+systemctl daemon-reload
+systemctl enable --now sbox-cleanup.timer
+echo "    Logs capped at 100 MB, weekly cleanup enabled."
+
 # ------------------------------------------------- official sing-box binary ---
 echo "==> Downloading official sing-box (SagerNet release, SHA-256 verified)..."
 TAG="$(curl -fsSL --max-time 20 https://api.github.com/repos/SagerNet/sing-box/releases/latest 2>/dev/null | jq -r .tag_name 2>/dev/null || true)"

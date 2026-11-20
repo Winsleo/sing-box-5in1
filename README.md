@@ -39,6 +39,10 @@ What the script does, in order:
    installed (it checks first so it can never lock you out); `fail2ban` for
    SSH; UFW default-deny with only SSH + the five node ports open; automatic
    security updates; BBR.
+2. **Disk saving** — systemd journal capped at 100 MB (7 days max), logrotate
+   for node logs (3 days, compressed), and a weekly cleanup timer (apt cache
+   + old journals). The node itself needs under 5 GB; the 47 GB minimum boot
+   volume is plenty.
 2. **Official sing-box** — latest release from `SagerNet/sing-box`, SHA-256
    verified against the GitHub release API, installed to
    `/usr/local/bin/sing-box`.

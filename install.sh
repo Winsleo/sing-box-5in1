@@ -83,7 +83,7 @@ fi
 echo "==> Installing dependencies and enabling firewall / fail2ban / auto-updates..."
 export DEBIAN_FRONTEND=noninteractive
 apt-get update -qq
-apt-get install -y -qq curl openssl jq tar ca-certificates ufw fail2ban unattended-updates > /dev/null
+apt-get install -y -qq curl openssl jq tar ca-certificates ufw fail2ban unattended-upgrades > /dev/null
 systemctl enable --now fail2ban
 # BBR (helps TUIC / Hysteria2 on lossy links)
 if ! sysctl net.ipv4.tcp_congestion_control 2>/dev/null | grep -q bbr; then

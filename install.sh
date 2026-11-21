@@ -215,7 +215,7 @@ jq -n \
     log: {level: "info", timestamp: true},
     inbounds: [
       {type: "vless", tag: "vless-reality", listen: "::", listen_port: 443,
-       users: [{uuid: $vless_uuid, flow: "xtls-rdrp-vision"}],
+       users: [{uuid: $vless_uuid, flow: "xtls-rprx-vision"}],
        tls: {enabled: true, server_name: $target,
              reality: {enabled: true,
                        handshake: {server: $target, server_port: 443},
@@ -289,7 +289,7 @@ proxies:
     reality-opts:
       public-key: $REALITY_PUB
       short-id: $SHORT_ID
-    flow: xtls-rdrp-vision
+    flow: xtls-rprx-vision
     packet-encoding: xudp
     udp: true
   - name: "Oracle-Hysteria2"
@@ -342,7 +342,7 @@ proxies:
 EOF
 
 cat > "$SBOX_DIR/links.txt" <<EOF
-vless://${VLESS_UUID}@${PUBLIC_IP}:443?encryption=none&flow=xtls-rdrp-vision&security=reality&sni=${REALITY_TARGET}&fp=chrome&pbk=${REALITY_PUB}&sid=${SHORT_ID}&type=tcp#Oracle-VLESS-Reality
+vless://${VLESS_UUID}@${PUBLIC_IP}:443?encryption=none&flow=xtls-rprx-vision&security=reality&sni=${REALITY_TARGET}&fp=chrome&pbk=${REALITY_PUB}&sid=${SHORT_ID}&type=tcp#Oracle-VLESS-Reality
 hysteria2://${HY2_PASS}@${PUBLIC_IP}:8443/?sni=${SNI}&insecure=1&obfs=salamander&obfs-password=${OBFS_PASS}&alpn=h3#Oracle-Hysteria2
 tuic://${TUIC_UUID}:${TUIC_PASS}@${PUBLIC_IP}:8444?congestion_control=bbr&udp_relay_mode=native&alpn=h3&allow_insecure=1&sni=${SNI}#Oracle-TUIC
 vmess://${VMESS_B64}
